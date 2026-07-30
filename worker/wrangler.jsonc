@@ -1,0 +1,40 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "kristianpraizner-hit-counter",
+  "main": "src/index.js",
+  "compatibility_date": "2026-07-30",
+
+  // Runs in front of the GitHub Pages origin. The trailing `*` is required:
+  // route patterns match the full URL including the query string, so a bare
+  // path would not match /api/hits?foo=1.
+  "routes": [
+    {
+      "pattern": "kristianpraizner.com/api/hits*",
+      "zone_name": "kristianpraizner.com"
+    }
+  ],
+
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "HIT_COUNTER",
+        "class_name": "HitCounter"
+      }
+    ]
+  },
+
+  // SQLite-backed Durable Objects are the tier available on the Workers free
+  // plan. If `wrangler deploy` rejects this block, the older equivalent is:
+  //   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["HitCounter"] }]
+  // Use one or the other -- a config containing both is rejected.
+  "exports": {
+    "HitCounter": {
+      "type": "durable-object",
+      "storage": "sqlite"
+    }
+  },
+
+  "observability": {
+    "enabled": true
+  }
+}

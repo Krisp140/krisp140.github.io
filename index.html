@@ -58,7 +58,7 @@
     <main>
       <section id="about" class="panel">
         <h2>About</h2>
-        <p>MIT AI & Decision Making student building AI systems, agent infrastructure, and applied ML products.</p>
+        <p>MIT AI & Decision Making graduate building AI systems, agent infrastructure, and applied ML products.</p>
         <blockquote>
           <p>∴⍑ᔑℸ ̣ ||𝙹⚍ ᓭᒷᒷꖌ ╎ᓭ ᓭᒷᒷꖌ╎リ⊣ ||𝙹⚍.</p>
         </blockquote>
@@ -177,7 +177,7 @@
       <section id="library" class="panel">
         <h2>Library</h2>
         <p>Books I've read and loved.</p>
-        <marquee class="library-marquee" behavior="scroll" scrollamount="3">No book in progress — send recommendations.</marquee>
+        <marquee class="library-marquee" behavior="scroll" scrollamount="3">Currently reading — Annihilation by Michel Houellebecq.</marquee>
         <div class="bookshelf covers" aria-label="Bookshelf">
           <a class="book-cover" href="https://en.wikipedia.org/wiki/Brave_New_World" target="_blank"
             rel="noopener noreferrer" title="Brave New World">
@@ -301,6 +301,25 @@
               sizes="100px"
               onerror="this.onerror=null;this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22150%22%3E%3Crect width=%22100%22 height=%22150%22 fill=%22%23dddddd%22/%3E%3Ctext x=%2250%22 y=%2278%22 text-anchor=%22middle%22 font-family=%22serif%22 font-size=%2212%22 fill=%22%23666%22%3ENo cover%3C/text%3E%3C/svg%3E'">
             <span class="cover-title">The Map and the Territory</span>
+          </a>
+          <a class="book-cover" href="https://en.wikipedia.org/wiki/The_Firm_(novel)" target="_blank"
+            rel="noopener noreferrer" title="The Firm">
+            <img class="cover-img" alt="Cover: The Firm" width="100" height="150" loading="lazy" decoding="async"
+              referrerpolicy="no-referrer" src="https://covers.openlibrary.org/b/isbn/9780440211457-M.jpg?default=false"
+              srcset="https://covers.openlibrary.org/b/isbn/9780440211457-S.jpg 80w, https://covers.openlibrary.org/b/isbn/9780440211457-M.jpg 180w, https://covers.openlibrary.org/b/isbn/9780440211457-L.jpg 320w"
+              sizes="100px"
+              onerror="this.onerror=null;this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22150%22%3E%3Crect width=%22100%22 height=%22150%22 fill=%22%23dddddd%22/%3E%3Ctext x=%2250%22 y=%2278%22 text-anchor=%22middle%22 font-family=%22serif%22 font-size=%2212%22 fill=%22%23666%22%3ENo cover%3C/text%3E%3C/svg%3E'">
+            <span class="cover-title">The Firm</span>
+          </a>
+          <a class="book-cover" href="https://en.wikipedia.org/wiki/The_Myth_of_Sisyphus" target="_blank"
+            rel="noopener noreferrer" title="The Myth of Sisyphus">
+            <img class="cover-img" alt="Cover: The Myth of Sisyphus" width="100" height="150" loading="lazy"
+              decoding="async" referrerpolicy="no-referrer"
+              src="https://covers.openlibrary.org/b/isbn/9780679733737-M.jpg?default=false"
+              srcset="https://covers.openlibrary.org/b/isbn/9780679733737-S.jpg 80w, https://covers.openlibrary.org/b/isbn/9780679733737-M.jpg 180w, https://covers.openlibrary.org/b/isbn/9780679733737-L.jpg 320w"
+              sizes="100px"
+              onerror="this.onerror=null;this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22150%22%3E%3Crect width=%22100%22 height=%22150%22 fill=%22%23dddddd%22/%3E%3Ctext x=%2250%22 y=%2278%22 text-anchor=%22middle%22 font-family=%22serif%22 font-size=%2212%22 fill=%22%23666%22%3ENo cover%3C/text%3E%3C/svg%3E'">
+            <span class="cover-title">The Myth of Sisyphus</span>
           </a>
         </div>
       </section>
@@ -536,9 +555,9 @@
     </section>
 
     <footer class="site-footer">
-      <div class="hit-counter" aria-label="decorative hit counter">
-        <span class="digit">0</span><span class="digit">0</span><span class="digit">1</span><span
-          class="digit">9</span><span class="digit">9</span><span class="digit">9</span>
+      <div class="hit-counter" aria-label="Site visitor count" role="status">
+        <span class="digit">0</span><span class="digit">0</span><span class="digit">0</span><span
+          class="digit">0</span><span class="digit">0</span><span class="digit">0</span>
       </div>
       <div class="copyright">
         &copy; <span id="y"></span> Kristian Praizner. Made with love &amp; HTML.
@@ -563,18 +582,56 @@
       }
     })();
 
-    // Simple hit counter using localStorage
+    // Hit counter backed by a Cloudflare Worker (see worker/). Counts once per
+    // browser session: the first load POSTs to increment, later loads GET only.
     (function () {
-      var hits = parseInt(localStorage.getItem('site-hits') || '0', 10) + 1;
-      localStorage.setItem('site-hits', hits.toString());
+      var counter = document.querySelector('.hit-counter');
+      if (!counter) return;
 
-      // Pad with zeros to 6 digits
-      var hitsStr = hits.toString().padStart(6, '0');
-      var digits = document.querySelectorAll('.hit-counter .digit');
+      var digits = counter.querySelectorAll('.digit');
+      if (!digits.length) return;
 
-      for (var i = 0; i < digits.length && i < hitsStr.length; i++) {
-        digits[i].textContent = hitsStr[hitsStr.length - digits.length + i];
+      function paint(text) {
+        for (var i = 0; i < digits.length; i++) {
+          digits[i].textContent = text[i];
+        }
       }
+
+      function render(value) {
+        var padded = String(value).padStart(digits.length, '0');
+        paint(padded.slice(-digits.length));
+      }
+
+      // Storage access throws in some privacy modes, so treat it as best-effort.
+      function alreadyCounted() {
+        try {
+          return sessionStorage.getItem('site-hit-counted') === '1';
+        } catch (e) {
+          return false;
+        }
+      }
+
+      function markCounted() {
+        try {
+          sessionStorage.setItem('site-hit-counted', '1');
+        } catch (e) { }
+      }
+
+      var counted = alreadyCounted();
+
+      fetch('/api/hits', { method: counted ? 'GET' : 'POST' })
+        .then(function (res) {
+          if (!res.ok) throw new Error('counter responded ' + res.status);
+          return res.json();
+        })
+        .then(function (data) {
+          if (typeof data.value !== 'number') throw new Error('malformed counter payload');
+          markCounted();
+          render(data.value);
+        })
+        .catch(function () {
+          paint(new Array(digits.length + 1).join('-'));
+        });
     })();
 
     (function () {
